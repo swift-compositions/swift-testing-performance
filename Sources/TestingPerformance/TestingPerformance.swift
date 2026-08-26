@@ -3,7 +3,7 @@
 //
 // Main namespace and core types
 
-import Real_Primitives
+import Real
 
 /// Namespace for performance testing utilities integrated with Swift Testing.
 ///

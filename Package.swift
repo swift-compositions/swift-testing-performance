@@ -18,7 +18,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-primitives/swift-numeric-primitives.git", branch: "main")
+        .package(url: "https://github.com/swift-molecules/swift-numeric.git", branch: "main")
     ],
     targets: [
         .target(
@@ -38,7 +38,7 @@ let package = Package(
         .target(
             name: "TestingPerformance",
             dependencies: [
-                .product(name: "Real Primitives", package: "swift-numeric-primitives"),
+                .product(name: "Real", package: "swift-numeric"),
                 .target(name: "MemoryAllocation")
             ]
         ),

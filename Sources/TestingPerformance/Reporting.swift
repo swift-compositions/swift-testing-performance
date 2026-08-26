@@ -3,7 +3,7 @@
 //
 // Performance test reporting and formatting
 
-import Real_Primitives
+import Real
 
 #if canImport(Darwin)
     import Darwin

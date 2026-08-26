@@ -3,7 +3,7 @@
 //
 // Statistical significance testing
 
-import Real_Primitives
+import Real
 
 extension TestingPerformance.Measurement {
 

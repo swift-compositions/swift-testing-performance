@@ -1,7 +1,7 @@
 # .github/metadata.yaml
 description: "Performance-testing infrastructure for Swift Testing: statistical analysis, performance budgets, and allocation tracking."
 topics:
-  - foundations
+  - compositions
   - testing
   - performance
 homepage: "https://swift-institute.org"
