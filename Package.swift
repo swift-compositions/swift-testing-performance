@@ -38,7 +38,7 @@ let package = Package(
         .target(
             name: "TestingPerformance",
             dependencies: [
-                .product(name: "Real", package: "swift-numeric"),
+                .product(name: "Numeric", package: "swift-numeric"),
                 .target(name: "MemoryAllocation")
             ]
         ),

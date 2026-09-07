@@ -3,7 +3,7 @@
 //
 // Performance test reporting and formatting
 
-import Real
+import Numeric
 
 #if canImport(Darwin)
     import Darwin

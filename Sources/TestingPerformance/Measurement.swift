@@ -3,7 +3,7 @@
 //
 // Performance measurement primitives for Swift Testing
 
-import Real
+import Numeric
 
 extension TestingPerformance {
     /// Statistical performance measurement containing multiple duration samples.

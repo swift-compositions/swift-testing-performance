@@ -3,7 +3,7 @@
 //
 // Statistical significance testing
 
-import Real
+import Numeric
 
 extension TestingPerformance.Measurement {
 
