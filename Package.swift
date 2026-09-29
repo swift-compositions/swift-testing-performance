@@ -18,7 +18,7 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/swift-molecules/swift-numeric.git", branch: "main")
+        .package(url: "https://github.com/swift-atoms/swift-numeric.git", branch: "main")
     ],
     targets: [
         .target(
