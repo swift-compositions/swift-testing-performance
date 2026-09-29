@@ -155,7 +155,7 @@ struct ReadmeVerificationTests {
             _ = numbers.reduce(0, +)
         }
 
-        try await TestingPerformance.expectPerformance(lessThan: .milliseconds(100)) {
+        try await TestingPerformance.expectPerformance(lessThan: .milliseconds(100)) { () async in
             operation()
         }
     }

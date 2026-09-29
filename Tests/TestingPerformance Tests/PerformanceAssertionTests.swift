@@ -93,7 +93,7 @@ extension PerformanceTests {
                 try await TestingPerformance.expectPerformance(
                     lessThan: .nanoseconds(1),  // Impossibly fast threshold
                     iterations: 5
-                ) {
+                ) { () async -> Int in
                     let numbers = Array(1...10_000)
                     return numbers.reduce(0, +)
                 }

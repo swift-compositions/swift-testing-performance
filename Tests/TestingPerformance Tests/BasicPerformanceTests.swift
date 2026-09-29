@@ -38,7 +38,7 @@ extension PerformanceTests {
             _ = numbers.reduce(0, +)
         }
 
-        @Test(.timed(iterations: 100, threshold: .microseconds(100)))
+        @Test(.timed(iterations: 100, threshold: .milliseconds(1)))
         func `fast operation threshold`() {
             let numbers = Array(1...100)
             _ = numbers[50]

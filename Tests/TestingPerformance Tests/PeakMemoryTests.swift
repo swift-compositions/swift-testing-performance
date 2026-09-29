@@ -32,7 +32,7 @@ struct PeakMemoryTests {
             try await TestingPerformance.expectPerformance(
                 lessThan: .seconds(1),
                 iterations: 5
-            ) {
+            ) { () async in
                 // Simple operation
                 _ = Array(repeating: 0, count: 100)
             }
