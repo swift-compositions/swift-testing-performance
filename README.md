@@ -16,7 +16,7 @@ The package enables performance regression detection in CI pipelines through tra
 - **Swift Testing Integration**: Declarative `.timed()` trait for performance testing with automatic statistical reporting
 - **Statistical Metrics**: Comprehensive analysis including min, median, mean, p95, p99, max, and standard deviation
 - **Performance Budgets**: Automatic test failures when median exceeds defined thresholds
-- **Memory Allocation Tracking**: Platform-specific malloc statistics to enforce zero-allocation algorithms
+- **Memory Allocation Tracking**: allocator-reported, process-wide live-byte deltas to bound how much memory a test leaves in use
 - **Memory Leak Detection**: Automatic leak detection with `.detectLeaks()` trait powered by swift-memory-allocation
 - **Peak Memory Tracking**: Monitor and enforce peak memory budgets with `.trackPeakMemory(limit:)` trait
 - **Flexible Measurement API**: Both trait-based (`@Test(.timed())`) and manual (`TestingPerformance.measure()`) measurement
@@ -114,7 +114,7 @@ Output includes allocation statistics:
      Avg:      4.91 KB
 ```
 
-Median of 0 bytes proves the algorithm is allocation-free.
+A median of 0 bytes means the measured code left no additional memory in use; it does not prove that the code made no allocations (memory allocated and freed inside the measurement nets to zero).
 
 ### Memory Leak Detection
 
@@ -508,31 +508,56 @@ func `slow operation`() { ... }
 
 ## Memory Allocation Tracking
 
-TestingPerformance tracks memory allocations during test execution using platform-specific malloc statistics:
+### What `bytesAllocated` and `maxAllocations` measure
 
-- **Darwin**: `malloc_statistics_t` via `malloc_zone_statistics()` (process-wide)
-- **Linux**: `mallinfo()` via glibc (process-wide)
+Each measured iteration records the change in the allocator's own count of bytes currently in use, for the whole process:
+
+- **Darwin**: `size_in_use` from `malloc_zone_statistics()`.
+- **Linux (glibc)**: `uordblks + hblkhd` from `mallinfo2()`.
+
+So the value is a live-byte delta, not allocation traffic and not an exact object payload:
+
+- Memory allocated and freed inside the measurement contributes about 0.
+- Memory still in use when the measurement ends counts in full, rounded up to the allocator's block sizes.
+- Freeing memory that existed before the measurement makes the value negative.
+- Other threads of the process (including other tests running in parallel) are included, because the statistics are process-wide.
+
+`.timed(maxAllocations:)` compares the median of these per-iteration deltas, in bytes, with the limit.
+
+### Deterministic guarantees and limits
+
+Guaranteed: on both platforms the value is a signed live-byte delta from the allocator, so a retained allocation of N bytes raises it by at least N and a freed one lowers it, as long as nothing else in the process allocates or frees at the same time.
+
+Not guaranteed: isolation from concurrent work. Median sampling reduces, but does not remove, noise from other threads or parallel tests; use `.serialized` suites and generous limits when exact values matter.
+
+### Allocation and deallocation counts are platform-specific
+
+`AllocationStats.allocations` and `deallocations` are not comparable across platforms:
+
+- **Darwin**: `allocations` is the change in live block count for the whole process (`blocks_in_use`), and `deallocations` is always 0.
+- **Linux**: `allocations` and `deallocations` count `malloc` and `free` calls made on the measuring thread.
+
+Use `bytesAllocated` and `maxAllocations` for cross-platform limits.
 
 ### Interpreting Allocation Stats
 
 ```
 Allocations:
-  Min:      0 bytes      ← Best case (no allocations)
+  Min:      0 bytes      ← No additional memory left in use
   Median:   0 bytes      ← Typical case (50th percentile)
-  Max:      49.06 KB     ← Worst case (caught background activity)
+  Max:      49.06 KB     ← Worst case (includes concurrent activity)
   Avg:      4.91 KB      ← Average across all iterations
 ```
 
-**Key insight**: Median of 0 bytes proves the algorithm is allocation-free. The max captures occasional background system allocations (malloc zone management, runtime housekeeping).
+A median of 0 bytes means the measured code did not grow the process's live memory; the max captures concurrent allocator activity (malloc zone management, runtime housekeeping, other tests).
 
 ### Setting Allocation Limits
 
-Account for system noise when setting limits:
+Account for concurrent activity when setting limits:
 
 ```swift
-// For truly allocation-free algorithms
-@Test(.timed(maxAllocations: 60_000))  // ~60KB headroom for system noise
-func `zero allocation test`() {
+@Test(.timed(maxAllocations: 60_000))  // ~60 KB headroom for concurrent activity
+func `no retained allocations`() {
     let numbers = Array(1...100_000)
     var sum = 0
     for num in numbers {
@@ -544,10 +569,10 @@ func `zero allocation test`() {
 
 ### Parallel Test Execution
 
-**Allocation limits use median values**, making them robust to parallel test execution:
+**Allocation limits use median values**, which reduces (but does not remove) interference from tests running in parallel:
 
 ```swift
-// These tests can run in parallel - median filtering handles interference
+// These tests can run in parallel; median filtering reduces interference
 @Suite("Parallel Safe")
 struct ParallelTests {
     @Test(.timed(maxAllocations: 500_000))

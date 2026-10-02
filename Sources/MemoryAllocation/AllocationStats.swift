@@ -15,8 +15,8 @@
 
 /// Memory allocation statistics
 ///
-/// Represents the allocation behavior of a code section, including
-/// the number of allocations, deallocations, and total bytes allocated.
+/// Represents the allocator-reported, process-wide change in live bytes for a code
+/// section, plus platform-specific allocation and deallocation counters.
 ///
 /// Example:
 /// ```swift
@@ -26,13 +26,13 @@
 /// print("Net: \(stats.netAllocations)")
 /// ```
 public struct AllocationStats: Sendable, Equatable {
-    /// Total number of allocations
+    /// Platform-specific allocation counter: change in live blocks for the process on Darwin, `malloc` calls on the measuring thread on Linux; not comparable across platforms
     public let allocations: Int
 
-    /// Total number of deallocations
+    /// Platform-specific deallocation counter: always 0 on Darwin, `free` calls on the measuring thread on Linux; not comparable across platforms
     public let deallocations: Int
 
-    /// Total bytes allocated
+    /// Change in bytes in use reported by the allocator for the whole process; negative when more memory was freed than allocated
     public let bytesAllocated: Int
 
     /// Net allocations (allocations - deallocations)
@@ -42,9 +42,7 @@ public struct AllocationStats: Sendable, Equatable {
         allocations - deallocations
     }
 
-    /// Net bytes (bytes that haven't been freed)
-    ///
-    /// This is an approximation as we don't track individual allocation sizes on deallocation.
+    /// Same value as `bytesAllocated`: the process-wide change in live bytes
     public var netBytes: Int {
         bytesAllocated
     }
