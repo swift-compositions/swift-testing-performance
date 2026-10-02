@@ -27,6 +27,8 @@ AllocationStats tracking_current(void);
 // Reset statistics to zero without stopping tracking
 void tracking_reset(void);
 
+int64_t tracking_live_bytes(void);
+
 #ifdef __cplusplus
 }
 #endif

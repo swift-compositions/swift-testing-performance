@@ -115,7 +115,7 @@ public struct AllocationStats: Sendable, Equatable {
             return AllocationStats(
                 allocations: Int(stats.allocations),
                 deallocations: Int(stats.deallocations),
-                bytesAllocated: Int(stats.bytes_allocated)
+                bytesAllocated: Int(tracking_live_bytes())
             )
         }
     #endif

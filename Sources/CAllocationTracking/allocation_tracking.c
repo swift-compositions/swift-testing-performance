@@ -1,6 +1,7 @@
 #define _GNU_SOURCE
 #include "include/allocation_tracking.h"
 #include <dlfcn.h>
+#include <malloc.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
@@ -65,4 +66,9 @@ AllocationStats tracking_current(void) {
 // Reset statistics to zero without stopping tracking
 void tracking_reset(void) {
     memset(&stats, 0, sizeof(stats));
+}
+
+int64_t tracking_live_bytes(void) {
+    struct mallinfo2 info = mallinfo2();
+    return (int64_t)(info.uordblks + info.hblkhd);
 }
