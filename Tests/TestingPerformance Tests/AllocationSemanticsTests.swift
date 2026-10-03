@@ -35,4 +35,16 @@ struct `Allocation Semantics` {
         #expect(existing == nil)
         #expect(stats.bytesAllocated <= -(Self.arrayBytes / 2))
     }
+
+    #if os(Linux)
+        @Test
+        func `a retained 1 MiB allocation counts at least one malloc call on the measuring thread`() {
+            var retained: [UInt8] = []
+            let (_, stats) = AllocationTracker.measure {
+                retained = Array(repeating: 1, count: 1 << 20)
+            }
+            #expect(retained.count == 1 << 20)
+            #expect(stats.allocations >= 1)
+        }
+    #endif
 }
